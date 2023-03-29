@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { AutocompleteCleanProps, ListItemProps } from '../../models/autocomplete-clean.interface';
 
-
-
 const ListItem: React.FC<ListItemProps> = ({ item, search }) => {
   const regex = new RegExp(`(${search})`, 'gi');
   const parts = item.split(regex);
