@@ -125,6 +125,7 @@ export const AutocompleteClean: React.FC<AutocompleteProps> = ({ data }) => {
             key={item}
             item={item}
             search={search}
+            isSelected={false}
             onClick={() => handleListItemClick(item)}
           />
         ))}
