@@ -47,20 +47,25 @@ export const AutocompleteClean: React.FC<AutocompleteProps> = ({ data }) => {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (selectedIndex > -1) {
-      setResults([]);
-    } else if (search.length >= 1) {
+    if (search && search.length >= 1) {
       const fetchData = async () => {
         const filteredData = data.filter((item) =>
           item.toLowerCase().includes(search.toLowerCase())
         );
-        setResults(filteredData);
+        if (
+          filteredData.length === 1 &&
+          filteredData[0].toLocaleLowerCase() === search.toLowerCase()
+        ) {
+          setResults([]);
+        } else {
+          setResults(filteredData);
+        }
       };
       fetchData();
     } else {
       setResults([]);
     }
-  }, [search, data, selectedIndex]);
+  }, [search, data]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
@@ -125,7 +130,7 @@ export const AutocompleteClean: React.FC<AutocompleteProps> = ({ data }) => {
             key={item}
             item={item}
             search={search}
-            isSelected={false}
+            isSelected={index === selectedIndex}
             onClick={() => handleListItemClick(item)}
           />
         ))}
