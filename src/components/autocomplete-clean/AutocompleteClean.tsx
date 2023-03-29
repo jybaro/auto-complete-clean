@@ -1,115 +1,134 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { AutocompleteCleanProps, ListItemProps } from '../../models/autocomplete-clean.interface';
+import React, { useState, useEffect, useRef, KeyboardEvent } from 'react';
 
-const ListItem: React.FC<ListItemProps> = ({ item, search }) => {
+interface AutocompleteProps {
+  data: string[];
+}
+
+interface ListItemProps {
+  item: string;
+  search: string;
+  onClick: () => void;
+  isSelected: boolean;
+}
+
+const ListItem: React.FC<ListItemProps> = ({
+  item,
+  search,
+  onClick,
+  isSelected,
+}) => {
   const regex = new RegExp(`(${search})`, 'gi');
   const parts = item.split(regex);
 
   return (
     <li
-    style={{
+      style={{
         padding: '10px',
         cursor: 'pointer',
+        backgroundColor: isSelected ? '#f0f0f0' : 'white',
       }}
+      onClick={onClick}
     >
       {parts.map((part, index) =>
         part.toLowerCase() === search.toLowerCase() ? (
           <strong key={index}>{part}</strong>
         ) : (
           <span key={index}>{part}</span>
-        ),
+        )
       )}
     </li>
   );
 };
 
-export const AutocompleteClean: React.FC<AutocompleteCleanProps> = ({ data }) => {
+export const AutocompleteClean: React.FC<AutocompleteProps> = ({ data }) => {
   const [search, setSearch] = useState('');
   const [results, setResults] = useState<string[]>([]);
-  const [focusIndex, setFocusIndex] = useState(-1);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const fetchResults = async (search: string) => {
-    if (search.length === 0) {
-      setResults([]);
-      return;
-    }
-
-    // Simulate asynchronous data fetching
-    setTimeout(() => {
-      const filteredResults = data.filter((item) =>
-        item.toLowerCase().includes(search.toLowerCase()),
-      );
-      setResults(filteredResults);
-    }, 300);
-  };
-
   useEffect(() => {
-    fetchResults(search);
-  }, [search]);
+    if (selectedIndex > -1) {
+      setResults([]);
+    } else if (search.length >= 1) {
+      const fetchData = async () => {
+        const filteredData = data.filter((item) =>
+          item.toLowerCase().includes(search.toLowerCase())
+        );
+        setResults(filteredData);
+      };
+      fetchData();
+    } else {
+      setResults([]);
+    }
+  }, [search, data, selectedIndex]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
+    setSelectedIndex(-1);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleListItemClick = (item: string) => {
+    setSearch(item);
+    setSelectedIndex(data.findIndex((element) => element === item) ?? -1);
+    setResults([]);
+  };
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'ArrowDown') {
-      setFocusIndex((prevIndex) => Math.min(prevIndex + 1, results.length - 1));
+      e.preventDefault();
+      setSelectedIndex((prevIndex) =>
+        prevIndex < results.length - 1 ? prevIndex + 1 : prevIndex
+      );
     } else if (e.key === 'ArrowUp') {
-      setFocusIndex((prevIndex) => Math.max(prevIndex - 1, -1));
-    } else if (e.key === 'Enter') {
-      if (focusIndex >= 0) {
-        setSearch(results[focusIndex]);
-        setResults([]);
-      }
+      e.preventDefault();
+      setSelectedIndex((prevIndex) =>
+        prevIndex > 0 ? prevIndex - 1 : prevIndex
+      );
+    } else if (e.key === 'Enter' && selectedIndex >= 0) {
+      e.preventDefault();
+      handleListItemClick(results[selectedIndex]);
+      setSelectedIndex(-1);
     }
-  };
-
-  const handleBlur = () => {
-    setFocusIndex(-1);
   };
 
   return (
     <div>
       <input
         ref={inputRef}
-        type="text"
         value={search}
         onChange={handleInputChange}
         onKeyDown={handleKeyDown}
-        onBlur={handleBlur}
         style={{
           width: '100%',
           padding: '10px',
-          fontSize: '16px',
-          border: '1px solid #ccc',
+          boxSizing: 'border-box',
         }}
-        aria-label="Search"
       />
       <ul
         style={{
+          position: 'absolute',
+          zIndex: 1,
           listStyleType: 'none',
+          backgroundColor: 'white',
           padding: 0,
           margin: 0,
-          border: '1px solid #ccc',
-          borderTop: 'none',
-          position: 'absolute',
           width: '100%',
+          boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)',
+          borderRadius: '4px',
+
           maxHeight: '200px',
-          overflowY: 'scroll',
-          zIndex: 1,
-          background: 'white',
+          overflowY: 'auto',
         }}
-        role="listbox"
-        aria-labelledby="search"
       >
-        {results.map((result, index) => (
+        {results.map((item, index) => (
           <ListItem
-            key={result}
-            item={result}
+            key={item}
+            item={item}
             search={search}
+            onClick={() => handleListItemClick(item)}
           />
         ))}
       </ul>
     </div>
-  )}
+  );
+};
