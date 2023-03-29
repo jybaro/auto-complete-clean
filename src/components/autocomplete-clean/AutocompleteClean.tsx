@@ -110,11 +110,6 @@ export const AutocompleteClean: React.FC<AutocompleteCleanProps> = ({ data }) =>
             key={result}
             item={result}
             search={search}
-            // style={{
-            //   padding: '10px',
-            //   backgroundColor: focusIndex === index ? '#f1f1f1' : undefined,
-            //   cursor: 'pointer',
-            // }}
           />
         ))}
       </ul>
